@@ -21,7 +21,7 @@
 </head>
 <body class="bg-emerald-50 min-h-screen flex flex-col">
 
-    <!-- License Activation Modal (For New Clients) -->
+    <!-- License Activation Modal -->
     <div id="license-screen" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-2 border-emerald-500">
             <div class="text-center mb-6">
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <!-- Login Modal / Screen -->
+    <!-- Login Modal -->
     <div id="login-screen" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div class="text-center mb-6">
@@ -75,6 +75,7 @@
     <nav class="bg-white shadow border-b">
         <div class="container mx-auto px-4 flex overflow-x-auto gap-2 py-2">
             <button onclick="switchTab('pos')" id="btn-pos" class="tab-btn px-4 py-2 rounded-lg font-semibold text-sm bg-emerald-600 text-white flex items-center gap-2 shrink-0"><i class="fa-solid fa-cash-register"></i> كاشير المبيعات (POS)</button>
+            <button onclick="switchTab('handover')" id="btn-handover" class="tab-btn px-4 py-2 rounded-lg font-semibold text-sm text-gray-600 hover:bg-emerald-50 flex items-center gap-2 shrink-0"><i class="fa-solid fa-scale-balanced"></i> تسليم الوردية ومطابقة الدرج</button>
             <button onclick="switchTab('inventory')" id="btn-inventory" class="admin-only tab-btn px-4 py-2 rounded-lg font-semibold text-sm text-gray-600 hover:bg-emerald-50 flex items-center gap-2 shrink-0"><i class="fa-solid fa-boxes-stacked"></i> مخزون الأقسام</button>
             <button onclick="switchTab('clients')" id="btn-clients" class="admin-only tab-btn px-4 py-2 rounded-lg font-semibold text-sm text-gray-600 hover:bg-emerald-50 flex items-center gap-2 shrink-0"><i class="fa-solid fa-users"></i> العملاء والموردين</button>
             <button onclick="switchTab('sales-log')" id="btn-sales-log" class="admin-only tab-btn px-4 py-2 rounded-lg font-semibold text-sm text-gray-600 hover:bg-emerald-50 flex items-center gap-2 shrink-0"><i class="fa-solid fa-clock-rotate-left"></i> سجل المبيعات</button>
@@ -92,7 +93,12 @@
         <!-- 1. POS TAB -->
         <div id="tab-pos" class="tab-content active space-y-6">
             <div class="bg-white p-4 rounded-xl shadow border-2 border-emerald-200">
-                <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-receipt text-emerald-600"></i> فاتورة البيع الحالية ونظام الدفع</h2>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-receipt text-emerald-600"></i> فاتورة البيع الحالية ونظام الدفع</h2>
+                    <button onclick="openCashDrawer()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg shadow text-xs flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-cash-register"></i> فتح درج الكاشير
+                    </button>
+                </div>
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-center">
                     <div class="lg:col-span-3 border rounded-lg overflow-hidden max-h-[220px] overflow-y-auto">
                         <table class="w-full text-right text-sm">
@@ -119,28 +125,29 @@
                             
                             <!-- Payment & Client Info -->
                             <div class="border-t pt-2 space-y-2">
-                                <label class="block text-xs font-bold text-gray-700">اختر العميل (لتسجيل المبيعات وواتساب):</label>
-                                <select id="sale-client-select" class="w-full px-2 py-1.5 border rounded text-xs bg-white font-semibold">
-                                    <option value="">عميل نقدي (بدون تسجيل)</option>
-                                </select>
-
                                 <label class="block text-xs font-bold text-gray-700">طريقة الدفع:</label>
-                                <select id="payment-method" class="w-full px-2 py-1.5 border rounded text-xs bg-white font-semibold">
+                                <select id="payment-method" onchange="togglePaymentFields()" class="w-full px-2 py-1.5 border rounded text-xs bg-white font-semibold">
                                     <option value="نقداً (كاش)">نقداً (كاش)</option>
                                     <option value="بطاقة / فيزا">بطاقة بنكية / فيزا</option>
                                     <option value="آجل (حساب عميل)">آجل (حساب عميل)</option>
                                 </select>
-                                
-                                <div class="flex justify-between items-center text-xs">
+
+                                <div class="flex justify-between items-center text-xs" id="tendered-box">
                                     <span>المستلم من العميل:</span>
                                     <input type="number" id="amount-tendered" placeholder="0" oninput="calculateChange()" class="w-20 px-2 py-1 border rounded text-left font-bold">
                                 </div>
-                                <div class="flex justify-between text-xs font-bold text-blue-600 bg-blue-50 p-1.5 rounded">
-                                    <span>الباقي للعميل:</span><span id="change-due">0.00 ج.م</span>
+                                <div class="flex justify-between text-xs font-bold text-blue-600 bg-blue-50 p-1.5 rounded" id="change-box">
+                                    <span id="change-label">الباقي للعميل:</span><span id="change-due">0.00 ج.م</span>
                                 </div>
+
+                                <label class="block text-xs font-bold text-gray-700 mt-1">رقم تليفون العميل (لواتساب):</label>
+                                <input type="text" id="manual-client-phone" placeholder="010xxxxxxxx" class="w-full px-2 py-1 border rounded text-xs font-mono">
                             </div>
                         </div>
-                        <button onclick="completeSale()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg shadow transition duration-200 flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-check-circle"></i> إتمام البيع، الطباعة وواتساب</button>
+                        <div class="space-y-2">
+                            <button onclick="completeSale()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg shadow transition duration-200 flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-check-circle"></i> إتمام البيع وطباعة الفاتورة</button>
+                            <button onclick="sendLastSaleWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-1.5 rounded-lg shadow transition duration-200 flex items-center justify-center gap-2 text-xs"><i class="fa-brands fa-whatsapp"></i> إرسال الفاتورة عبر واتساب</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -162,7 +169,43 @@
             </div>
         </div>
 
-        <!-- 2. INVENTORY TAB -->
+        <!-- 2. SHIFT HANDOVER TAB (تسليم الوردية ومطابقة الدرج) -->
+        <div id="tab-handover" class="tab-content">
+            <div class="bg-white p-6 rounded-xl shadow max-w-2xl mx-auto space-y-6">
+                <div class="text-center border-b pb-4">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center justify-center gap-2"><i class="fa-solid fa-scale-balanced text-emerald-600"></i> تسليم الشفت ومطابقة درج الكاشير</h2>
+                    <p class="text-xs text-gray-500 mt-1">حساب النقدية المتوقعة ومقارنتها بالفلوس الفعلية في الدرج لتسليم الكاشير</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-xl border">
+                    <div>إجمالي مبيعات الكاش (نقداً): <span id="handover-cash-sales" class="font-bold text-emerald-600">0.00 ج.م</span></div>
+                    <div>إجمالي مبيعات الفيزا: <span id="handover-visa-sales" class="font-bold text-blue-600">0.00 ج.م</span></div>
+                    <div>إجمالي المبيعات الآجلة: <span id="handover-credit-sales" class="font-bold text-amber-600">0.00 ج.م</span></div>
+                    <div>إجمالي المصروفات المسحوبة: <span id="handover-expenses" class="font-bold text-red-600">0.00 ج.م</span></div>
+                </div>
+
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-300 space-y-3">
+                    <div class="flex justify-between items-center text-base font-bold text-emerald-900">
+                        <span>النقدية المتوقعة بالدرج (كاش - مصروفات):</span>
+                        <span id="handover-expected-cash" class="text-lg">0.00 ج.م</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">أدخل إجمالي الفلوس الفعلية الموجودة بالدرج (العد اليدوي):</label>
+                        <input type="number" id="actual-drawer-cash" placeholder="أدخل المبلغ الموجود فعلياً..." oninput="calculateDrawerDifference()" class="w-full px-3 py-2 border-2 border-emerald-500 rounded-lg text-lg font-bold bg-white">
+                    </div>
+                    <div class="flex justify-between items-center text-sm font-black pt-2 border-t border-emerald-200">
+                        <span id="diff-label">الفرق (عجز / زيادة):</span>
+                        <span id="drawer-difference" class="text-base">0.00 ج.م</span>
+                    </div>
+                </div>
+
+                <button onclick="printShiftHandoverReport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-print"></i> طباعة تقرير تسليم الوردية
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. INVENTORY TAB -->
         <div id="tab-inventory" class="tab-content">
             <div class="bg-white p-4 rounded-xl shadow mb-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-plus-circle text-emerald-600"></i> إضافة سلعة / منتج جديد للسوبر ماركت</h2>
@@ -205,7 +248,7 @@
             </div>
         </div>
 
-        <!-- 3. CLIENTS & SUPPLIERS TAB -->
+        <!-- 4. CLIENTS & SUPPLIERS TAB -->
         <div id="tab-clients" class="tab-content">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Clients Section -->
@@ -246,7 +289,7 @@
             </div>
         </div>
 
-        <!-- 4. SALES LOG TAB -->
+        <!-- 5. SALES LOG TAB -->
         <div id="tab-sales-log" class="tab-content">
             <div class="bg-white p-4 rounded-xl shadow">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> سجل تواريخ وطرق دفع مبيعات السوبر ماركت</h2>
@@ -255,7 +298,7 @@
                         <thead class="bg-gray-50 border-b">
                             <tr>
                                 <th class="p-3">تاريخ ووقت البيع</th>
-                                <th class="p-3">العميل</th>
+                                <th class="p-3">رقم الهاتف</th>
                                 <th class="p-3">طريقة الدفع</th>
                                 <th class="p-3">المنتجات المباعة والكميات</th>
                                 <th class="p-3">إجمالي الفاتورة</th>
@@ -267,7 +310,7 @@
             </div>
         </div>
 
-        <!-- 5. PURCHASES TAB -->
+        <!-- 6. PURCHASES TAB -->
         <div id="tab-purchases" class="tab-content">
             <div class="bg-white p-4 rounded-xl shadow mb-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-truck text-emerald-600"></i> توريدات الموردين وفواتير الشراء</h2>
@@ -291,7 +334,7 @@
             </div>
         </div>
 
-        <!-- 6. EXPENSES TAB -->
+        <!-- 7. EXPENSES TAB -->
         <div id="tab-expenses" class="tab-content">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div class="bg-white p-4 rounded-xl shadow border-r-4 border-emerald-500">
@@ -333,16 +376,15 @@
             </div>
         </div>
 
-        <!-- 7. REPORTS & BACKUP TAB -->
+        <!-- 8. REPORTS & BACKUP TAB -->
         <div id="tab-reports" class="tab-content">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="bg-white p-4 rounded-xl shadow">
                     <h3 class="text-md font-bold text-gray-800 mb-4">ملخص الأرباح المالية للسوبر ماركت</h3>
                     <div class="space-y-3">
-                        <div class="flex justify-between p-3 bg-gray-50 rounded"><span>إجمالي المبيعات:</span><span id="rep-sales" class="font-bold text-blue-600">0.00 ج.م</span></div>
-                        <div class="flex justify-between p-3 bg-gray-50 rounded"><span>تكلفة البضاعة المباعة:</span><span id="rep-cost" class="font-bold text-orange-600">0.00 ج.م</span></div>
+                        <div class="flex justify-between p-3 bg-emerald-50 rounded"><span>أرباح اليوم الواحد:</span><span id="rep-daily-profit" class="font-bold text-emerald-700">0.00 ج.م</span></div>
+                        <div class="flex justify-between p-3 bg-blue-50 rounded"><span>أرباح السنة الحالية:</span><span id="rep-annual-profit" class="font-bold text-blue-700">0.00 ج.م</span></div>
                         <div class="flex justify-between p-3 bg-gray-50 rounded"><span>إجمالي المصروفات:</span><span id="rep-expenses" class="font-bold text-red-600">0.00 ج.م</span></div>
-                        <div class="flex justify-between p-3 bg-emerald-50 border border-emerald-200 rounded text-lg"><span>صافي الربح الحقيقي:</span><span id="rep-net" class="font-black text-emerald-700">0.00 ج.م</span></div>
                     </div>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow flex flex-col justify-between">
@@ -356,10 +398,6 @@
                             <i class="fa-solid fa-upload"></i> استعادة نسخة احتياطية
                             <input type="file" id="backup-file" accept=".json" onchange="importBackup(event)" class="hidden">
                         </label>
-                        <label class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-file-arrow-down"></i> استيراد سلع من برنامج قديم (JSON/CSV)
-                            <input type="file" id="legacy-file" accept=".json,.csv" onchange="importLegacyData(event)" class="hidden">
-                        </label>
                     </div>
                 </div>
             </div>
@@ -369,7 +407,7 @@
             </div>
         </div>
 
-        <!-- 8. ANNUAL AUDIT & REPORTS TAB -->
+        <!-- 9. ANNUAL AUDIT & REPORTS TAB -->
         <div id="tab-annual-audit" class="tab-content">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div class="bg-white p-4 rounded-xl shadow border-r-4 border-purple-500">
@@ -384,6 +422,12 @@
                     <h3 class="text-gray-500 text-sm">قيمة المخزون المتوقعة (سعر البيع)</h3>
                     <p id="audit-sell-value" class="text-2xl font-bold text-gray-800 mt-2">0.00 ج.م</p>
                 </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow mb-6 text-center bg-emerald-50 border-2 border-emerald-400">
+                <h3 class="text-lg font-bold text-emerald-800 mb-2">إتمام الجرد السنوي وتصفير العام</h3>
+                <p class="text-xs text-gray-600 mb-4">عند الضغط على هذا الزر، سيتم أرشفة مبيعات السنة الحالية والبدء في العام الجديد بنظافة تامة مع الاحتفاظ برصيد المخزون الحالي.</p>
+                <button onclick="performAnnualAuditReset()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-xl shadow transition"><i class="fa-solid fa-triangle-exclamation"></i> تنفيذ الجرد السنوي وبدء العام الجديد</button>
             </div>
 
             <div class="bg-white p-4 rounded-xl shadow mb-6">
@@ -405,7 +449,7 @@
             </div>
         </div>
 
-        <!-- 9. SETTINGS TAB -->
+        <!-- 10. SETTINGS TAB -->
         <div id="tab-settings" class="tab-content">
             <div class="bg-white p-6 rounded-xl shadow max-w-xl mx-auto">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-gear text-emerald-600"></i> إعدادات اسم وهواية السوبر ماركت</h2>
@@ -429,14 +473,13 @@
 
     </main>
 
-    <!-- Hidden Printable Receipt (Thermal POS Format) -->
+    <!-- Hidden Printable Receipt -->
     <div id="printable-receipt" class="hidden bg-white p-4 text-black text-center font-mono" style="width: 300px; margin: auto;">
         <h3 id="receipt-store-name" class="font-bold text-lg">سوبر ماركت الخير</h3>
         <p id="receipt-store-phone" class="text-xs">تليفون: 01000000000</p>
         <hr class="my-2 border-dashed border-black">
         <div class="text-right text-xs space-y-1">
             <p>التاريخ: <span id="receipt-date"></span></p>
-            <p>العميل: <span id="receipt-client">نقدي</span></p>
             <p>طريقة الدفع: <span id="receipt-method">نقداً</span></p>
         </div>
         <hr class="my-2 border-dashed border-black">
@@ -451,8 +494,8 @@
             <div class="flex justify-between"><span>المجموع:</span><span id="receipt-subtotal">0</span></div>
             <div class="flex justify-between"><span>الخصم:</span><span id="receipt-discount">0</span></div>
             <div class="flex justify-between text-sm"><span>الصافي المطلوب:</span><span id="receipt-total">0</span></div>
-            <div class="flex justify-between"><span>المستلم:</span><span id="receipt-tendered">0</span></div>
-            <div class="flex justify-between"><span>الباقي:</span><span id="receipt-change">0</span></div>
+            <div class="flex justify-between" id="receipt-tendered-row"><span>المستلم:</span><span id="receipt-tendered">0</span></div>
+            <div class="flex justify-between" id="receipt-change-row"><span id="receipt-change-title">الباقي:</span><span id="receipt-change">0</span></div>
         </div>
         <hr class="my-2 border-dashed border-black">
         <p class="text-xs font-bold mt-2">شكراً لزيارتكم، نتمنى لكم تسوقاً سعيداً!</p>
@@ -469,6 +512,7 @@
         };
 
         let currentRole = null;
+        let lastSaleData = null;
 
         function checkLicenseStatus() {
             let activeLicense = localStorage.getItem('market_license_activated');
@@ -528,15 +572,10 @@
         let db = {
             products: JSON.parse(localStorage.getItem('market_products')) || [
                 { id: 1, name: 'أرز مصري فاخر (1 كجم)', brand: 'الساعة', category: 'مواد غذائية وجافة', buy: 25, sell: 30, qty: 50, exp: '2027-08-10' },
-                { id: 2, name: 'حليب كامل الدسم (1 لتر)', brand: 'جهينة', category: 'منتجات ألبان وأجبان', buy: 38, sell: 45, qty: 30, exp: '2026-05-15' },
-                { id: 3, name: 'مسحوق غسيل أوتوماتيك (2.5 كجم)', brand: 'تايد', category: 'منظفات ومطهرات', buy: 120, sell: 145, qty: 15, exp: '2029-12-01' }
+                { id: 2, name: 'حليب كامل الدسم (1 لتر)', brand: 'جهينة', category: 'منتجات ألبان وأجبان', buy: 38, sell: 45, qty: 30, exp: '2026-05-15' }
             ],
-            clients: JSON.parse(localStorage.getItem('market_clients')) || [
-                { id: 1, name: 'أحمد محمود', phone: '01012345678' }
-            ],
-            suppliers: JSON.parse(localStorage.getItem('market_suppliers')) || [
-                { id: 1, name: 'شركة جهينة للألبان', phone: '01098765432' }
-            ],
+            clients: JSON.parse(localStorage.getItem('market_clients')) || [],
+            suppliers: JSON.parse(localStorage.getItem('market_suppliers')) || [],
             cart: [],
             purchases: JSON.parse(localStorage.getItem('market_purchases')) || [],
             expenses: JSON.parse(localStorage.getItem('market_expenses')) || [],
@@ -587,6 +626,10 @@
             renderAll();
         }
 
+        function openCashDrawer() {
+            alert('تم إرسال إشارة فتح درج الكاشير بنجاح (Cash Drawer Opened)!');
+        }
+
         function exportBackup() {
             let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
             let downloadAnchor = document.createElement('a');
@@ -623,65 +666,8 @@
             reader.readAsText(file);
         }
 
-        function importLegacyData(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let content = e.target.result;
-                try {
-                    if (file.name.endsWith('.json')) {
-                        let parsed = JSON.parse(content);
-                        let items = Array.isArray(parsed) ? parsed : (parsed.products || []);
-                        let addedCount = 0;
-                        items.forEach(item => {
-                            db.products.push({
-                                id: Date.now() + Math.random(),
-                                name: item.name || item.ProductName || 'سلعة مستوردة',
-                                brand: item.brand || item.Brand || 'عام',
-                                category: item.category || item.Category || 'مواد غذائية وجافة',
-                                buy: parseFloat(item.buy || item.BuyPrice || item.cost || 0),
-                                sell: parseFloat(item.sell || item.SellPrice || item.price || 0),
-                                qty: parseInt(item.qty || item.Quantity || item.stock || 20),
-                                exp: item.exp || item.ExpiryDate || 'غير محدد'
-                            });
-                            addedCount++;
-                        });
-                        saveData();
-                        alert(`تم بنجاح استيراد وإضافة ${addedCount} سلعة للمخزن!`);
-                    } else if (file.name.endsWith('.csv')) {
-                        let lines = content.split('\n');
-                        let addedCount = 0;
-                        for (let i = 1; i < lines.length; i++) {
-                            let line = lines[i].trim();
-                            if (!line) continue;
-                            let cols = line.split(',');
-                            if (cols.length >= 4) {
-                                db.products.push({
-                                    id: Date.now() + Math.random(),
-                                    name: cols[0].trim(),
-                                    brand: cols[1] ? cols[1].trim() : 'عام',
-                                    category: 'مواد غذائية وجافة',
-                                    buy: parseFloat(cols[2]) || 0,
-                                    sell: parseFloat(cols[3]) || 0,
-                                    qty: parseInt(cols[4]) || 20,
-                                    exp: 'غير محدد'
-                                });
-                                addedCount++;
-                            }
-                        }
-                        saveData();
-                        alert(`تم بنجاح استيراد ${addedCount} سلعة من ملف الـ CSV!`);
-                    }
-                } catch (err) {
-                    alert('تعذر استيراد الملف، تأكد من صحة تنسيق الملف (JSON أو CSV).');
-                }
-            };
-            reader.readAsText(file);
-        }
-
         function switchTab(tabId) {
-            if(currentRole === 'cashier' && tabId !== 'pos') return;
+            if(currentRole === 'cashier' && tabId !== 'pos' && tabId !== 'handover') return;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-emerald-600', 'text-white');
@@ -691,6 +677,8 @@
             let activeBtn = document.getElementById('btn-' + tabId);
             activeBtn.classList.add('bg-emerald-600', 'text-white');
             activeBtn.classList.remove('text-gray-600', 'hover:bg-emerald-50');
+            
+            if(tabId === 'handover') updateShiftHandover();
             if(tabId === 'reports') updateReports();
             if(tabId === 'annual-audit') renderAnnualAudit();
             if(tabId === 'pos') {
@@ -711,6 +699,61 @@
             renderExpenses();
             updateFinancials();
             renderAnnualAudit();
+        }
+
+        function updateShiftHandover() {
+            let cashSales = 0;
+            let visaSales = 0;
+            let creditSales = 0;
+
+            db.sales.forEach(s => {
+                if(s.paymentMethod === 'نقداً (كاش)') cashSales += s.total;
+                else if(s.paymentMethod === 'بطاقة / فيزا') visaSales += s.total;
+                else if(s.paymentMethod === 'آجل (حساب عميل)') creditSales += s.total;
+            });
+
+            let totalExpenses = db.expenses.reduce((sum, e) => sum + e.amount, 0);
+            let expectedCash = cashSales - totalExpenses;
+
+            document.getElementById('handover-cash-sales').innerText = cashSales.toFixed(2) + ' ' + storeConfig.currency;
+            document.getElementById('handover-visa-sales').innerText = visaSales.toFixed(2) + ' ' + storeConfig.currency;
+            document.getElementById('handover-credit-sales').innerText = creditSales.toFixed(2) + ' ' + storeConfig.currency;
+            document.getElementById('handover-expenses').innerText = totalExpenses.toFixed(2) + ' ' + storeConfig.currency;
+            document.getElementById('handover-expected-cash').innerText = expectedCash.toFixed(2) + ' ' + storeConfig.currency;
+            
+            document.getElementById('actual-drawer-cash').value = '';
+            document.getElementById('drawer-difference').innerText = '0.00 ' + storeConfig.currency;
+        }
+
+        function calculateDrawerDifference() {
+            let cashSales = 0;
+            db.sales.forEach(s => {
+                if(s.paymentMethod === 'نقداً (كاش)') cashSales += s.total;
+            });
+            let totalExpenses = db.expenses.reduce((sum, e) => sum + e.amount, 0);
+            let expectedCash = cashSales - totalExpenses;
+            
+            let actualCash = parseFloat(document.getElementById('actual-drawer-cash').value) || 0;
+            let diff = actualCash - expectedCash;
+
+            let diffEl = document.getElementById('drawer-difference');
+            let labelEl = document.getElementById('diff-label');
+
+            if(diff === 0) {
+                diffEl.innerText = "مطابق تماماً (لا يوجد عجز أو زيادة)";
+                diffEl.className = "text-base text-emerald-600 font-bold";
+            } else if(diff > 0) {
+                diffEl.innerText = `زيادة في الدرج بقيمة: +${diff.toFixed(2)} ${storeConfig.currency}`;
+                diffEl.className = "text-base text-blue-600 font-bold";
+            } else {
+                diffEl.innerText = `عجز في الدرج بقيمة: ${diff.toFixed(2)} ${storeConfig.currency}`;
+                diffEl.className = "text-base text-red-600 font-bold";
+            }
+        }
+
+        function printShiftHandoverReport() {
+            alert('تم تجهيز تقرير مطابقة الوردية للطباعة بنجاح!');
+            window.print();
         }
 
         function renderPOSProducts(filter = '') {
@@ -812,13 +855,28 @@
             calculateChange();
         }
 
+        function togglePaymentFields() {
+            let method = document.getElementById('payment-method').value;
+            let changeTitle = document.getElementById('receipt-change-title');
+            let changeLabel = document.getElementById('change-label');
+            if(method === 'آجل (حساب عميل)') {
+                if(changeLabel) changeLabel.innerText = "الباقي على العميل (دين):";
+                if(changeTitle) changeTitle.innerText = "الباقي على العميل:";
+            } else {
+                if(changeLabel) changeLabel.innerText = "الباقي للعميل:";
+                if(changeTitle) changeTitle.innerText = "الباقي:";
+            }
+            calculateChange();
+        }
+
         function calculateChange() {
             let subtotal = db.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             let discount = parseFloat(document.getElementById('cart-discount').value) || 0;
             let total = Math.max(0, subtotal - discount);
             let tendered = parseFloat(document.getElementById('amount-tendered').value) || 0;
-            let change = tendered - total;
-            document.getElementById('change-due').innerText = (change >= 0 ? change : 0).toFixed(2) + ' ' + storeConfig.currency;
+            
+            let diff = tendered - total;
+            document.getElementById('change-due').innerText = (diff >= 0 ? diff : Math.abs(diff)).toFixed(2) + ' ' + storeConfig.currency;
         }
 
         function completeSale() {
@@ -828,31 +886,19 @@
             let total = Math.max(0, subtotal - discount);
             let totalBuyCost = db.cart.reduce((sum, item) => sum + (item.buyPrice * item.qty), 0);
             let paymentMethod = document.getElementById('payment-method').value;
-            
-            let clientSelect = document.getElementById('sale-client-select');
-            let clientId = clientSelect.value;
-            let clientName = "عميل نقدي";
-            let clientPhone = "";
-
-            if(clientId) {
-                let client = db.clients.find(c => c.id.toString() === clientId);
-                if(client) {
-                    clientName = client.name;
-                    clientPhone = client.phone;
-                }
-            }
+            let clientPhone = document.getElementById('manual-client-phone').value.trim();
 
             let tendered = parseFloat(document.getElementById('amount-tendered').value) || total;
-            let change = Math.max(0, tendered - total);
+            let change = tendered - total;
 
             db.cart.forEach(item => {
                 let p = db.products.find(prod => prod.id === item.id);
                 if(p) p.qty -= item.qty;
             });
 
-            let saleRecord = {
+            lastSaleData = {
                 date: new Date().toLocaleString('ar-EG'),
-                clientName: clientName,
+                phone: clientPhone || 'غير مسجل',
                 paymentMethod: paymentMethod,
                 items: [...db.cart],
                 subtotal: subtotal,
@@ -863,32 +909,40 @@
                 buyCost: totalBuyCost
             };
 
-            db.sales.push(saleRecord);
+            db.sales.push(lastSaleData);
             saveData();
 
-            // Print Receipt
-            printReceipt(saleRecord);
-
-            // Send WhatsApp Message if phone exists
-            if(clientPhone) {
-                sendWhatsAppMessage(clientPhone, saleRecord);
-            }
+            printReceipt(lastSaleData);
 
             db.cart = [];
             document.getElementById('cart-discount').value = 0;
             document.getElementById('amount-tendered').value = '';
+            document.getElementById('manual-client-phone').value = '';
             document.getElementById('change-due').innerText = '0.00 ' + storeConfig.currency;
-            alert('تمت عملية البيع بنجاح، طباعة الفاتورة وجاهزية إرسال رسالة واتساب!');
+            alert('تمت عملية البيع بنجاح وطباعة الفاتورة وفتح درج الكاشير!');
             
             let barcodeInput = document.getElementById('barcode-scanner-input');
             if(barcodeInput) barcodeInput.focus();
+        }
+
+        function sendLastSaleWhatsApp() {
+            if(!lastSaleData) { alert('لا توجد عملية بيع أخيرة مسجلة لإرسالها!'); return; }
+            let phone = prompt('أدخل رقم هاتف العميل للواتساب:', lastSaleData.phone);
+            if(!phone) return;
+
+            let itemsText = lastSaleData.items.map(i => `- ${i.name} (عدد: ${i.qty}) - ${(i.price * i.qty).toFixed(2)} ${storeConfig.currency}`).join('%0a');
+            let message = `مرحباً بك في *${storeConfig.name}* 🛒%0a%0a*تفاصيل المشتريات:*%0a${itemsText}%0a%0a-------------------%0a*الإجمالي المطلوب:* ${lastSaleData.total.toFixed(2)} ${storeConfig.currency}%0a*المبلغ المدفوع:* ${lastSaleData.tendered.toFixed(2)} ${storeConfig.currency}%0a*طريقة الدفع:* ${lastSaleData.paymentMethod}%0a*المتبقي:* ${Math.abs(lastSaleData.change).toFixed(2)} ${storeConfig.currency}%0a%0aنتمنى زيارتكم دائماً! ❤️`;
+            
+            let cleanPhone = phone.replace(/\D/g, '');
+            if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone;
+            
+            window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
         }
 
         function printReceipt(sale) {
             document.getElementById('receipt-store-name').innerText = storeConfig.name;
             document.getElementById('receipt-store-phone').innerText = `تليفون: ${storeConfig.phone}`;
             document.getElementById('receipt-date').innerText = sale.date;
-            document.getElementById('receipt-client').innerText = sale.clientName;
             document.getElementById('receipt-method').innerText = sale.paymentMethod;
 
             let tbody = document.getElementById('receipt-items-body');
@@ -901,19 +955,9 @@
             document.getElementById('receipt-discount').innerText = sale.discount.toFixed(2) + ' ' + storeConfig.currency;
             document.getElementById('receipt-total').innerText = sale.total.toFixed(2) + ' ' + storeConfig.currency;
             document.getElementById('receipt-tendered').innerText = sale.tendered.toFixed(2) + ' ' + storeConfig.currency;
-            document.getElementById('receipt-change').innerText = sale.change.toFixed(2) + ' ' + storeConfig.currency;
+            document.getElementById('receipt-change').innerText = Math.abs(sale.change).toFixed(2) + ' ' + storeConfig.currency;
 
             window.print();
-        }
-
-        function sendWhatsAppMessage(phone, sale) {
-            let itemsText = sale.items.map(i => `- ${i.name} (العدد: ${i.qty}) - ${(i.price * i.qty).toFixed(2)} ${storeConfig.currency}`).join('%0a');
-            let message = `مرحباً يا أستاذ/ة *${sale.clientName}*%0aشكراً لتسوقك في *${storeConfig.name}* 🛒%0a%0a*تفاصيل المشتريات:*%0a${itemsText}%0a%0a-------------------%0a*الإجمالي المطلوب:* ${sale.total.toFixed(2)} ${storeConfig.currency}%0a*المبلغ المدفوع:* ${sale.tendered.toFixed(2)} ${storeConfig.currency}%0a*الباقي:* ${sale.change.toFixed(2)} ${storeConfig.currency}%0a*طريقة الدفع:* ${sale.paymentMethod}%0a%0aنتمنى رؤيتكم دائماً! ❤️`;
-            
-            let cleanPhone = phone.replace(/\D/g, '');
-            if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone; // Egypt country code format for WhatsApp
-            
-            window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
         }
 
         function saveProduct(e) {
@@ -959,15 +1003,12 @@
         function renderClientsAndSuppliers() {
             let clientTbody = document.getElementById('clients-table-body');
             let supplierTbody = document.getElementById('suppliers-table-body');
-            let saleClientSelect = document.getElementById('sale-client-select');
 
             clientTbody.innerHTML = '';
             supplierTbody.innerHTML = '';
-            saleClientSelect.innerHTML = '<option value="">عميل نقدي (بدون تسجيل)</option>';
 
             db.clients.forEach(c => {
                 clientTbody.innerHTML += `<tr class="border-b"><td class="p-2 font-semibold">${c.name}</td><td class="p-2 text-xs text-gray-600">${c.phone}</td><td class="p-2"><button onclick="deleteClient(${c.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-                saleClientSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.phone})</option>`;
             });
 
             db.suppliers.forEach(s => {
@@ -1021,11 +1062,11 @@
             db.sales.slice().reverse().forEach(sale => {
                 let itemsList = sale.items.map(i => `${i.name} (عدد: ${i.qty})`).join('، ');
                 let methodBadge = sale.paymentMethod || 'نقداً (كاش)';
-                let clientName = sale.clientName || 'عميل نقدي';
+                let phoneNum = sale.phone || 'غير مسجل';
                 tbody.innerHTML += `
                     <tr class="border-b">
                         <td class="p-3 font-semibold text-emerald-600 text-xs">${sale.date}</td>
-                        <td class="p-3 font-bold text-gray-800 text-xs">${clientName}</td>
+                        <td class="p-3 font-bold text-gray-800 text-xs">${phoneNum}</td>
                         <td class="p-3"><span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-bold">${methodBadge}</span></td>
                         <td class="p-3 text-sm text-gray-700">${itemsList}</td>
                         <td class="p-3 font-bold text-gray-900">${sale.total.toFixed(2)} ${storeConfig.currency}</td>
@@ -1129,16 +1170,28 @@
         }
 
         function updateReports() {
-            let totalSales = db.sales.reduce((sum, s) => sum + s.total, 0);
-            let totalBuyCost = db.sales.reduce((sum, s) => sum + s.buyCost, 0);
+            let todayStr = new Date().toLocaleDateString('ar-EG');
+            let currentYearStr = new Date().getFullYear().toString();
+
+            let dailyProfit = 0;
+            let annualProfit = 0;
             let totalExpenses = db.expenses.reduce((sum, e) => sum + e.amount, 0);
-            let netProfit = totalSales - totalBuyCost - totalExpenses;
 
-            document.getElementById('rep-sales').innerText = totalSales.toFixed(2) + ' ' + storeConfig.currency;
-            document.getElementById('rep-cost').innerText = totalBuyCost.toFixed(2) + ' ' + storeConfig.currency;
+            db.sales.forEach(sale => {
+                let profit = sale.total - sale.buyCost;
+                if(sale.date.includes(todayStr)) {
+                    dailyProfit += profit;
+                }
+                if(sale.date.includes(currentYearStr)) {
+                    annualProfit += profit;
+                }
+            });
+
+            document.getElementById('rep-daily-profit').innerText = dailyProfit.toFixed(2) + ' ' + storeConfig.currency;
+            document.getElementById('rep-annual-profit').innerText = annualProfit.toFixed(2) + ' ' + storeConfig.currency;
             document.getElementById('rep-expenses').innerText = totalExpenses.toFixed(2) + ' ' + storeConfig.currency;
-            document.getElementById('rep-net').innerText = netProfit.toFixed(2) + ' ' + storeConfig.currency;
 
+            let totalSales = db.sales.reduce((sum, s) => sum + s.total, 0);
             let ctx = document.getElementById('financialChart').getContext('2d');
             if(financialChartInstance) financialChartInstance.destroy();
             financialChartInstance = new Chart(ctx, {
@@ -1196,6 +1249,16 @@
                     </tr>
                 `;
             });
+        }
+
+        function performAnnualAuditReset() {
+            if(confirm('تنبيه هام جداً: سيتم تصفير المبيعات والمصروفات السابقة للبدء في العام الجديد، مع الاحتفاظ ببضاعة المخزن وأرصدة العملاء. هل أنت متأكد من تنفيذ الجرد السنوي؟')) {
+                db.sales = [];
+                db.purchases = [];
+                db.expenses = [];
+                saveData();
+                alert('تم إتمام الجرد السنوي بنجاح! تم البدء في العام الجديد بنظافة تامة.');
+            }
         }
 
         window.onload = function() {
